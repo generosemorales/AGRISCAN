@@ -51,6 +51,7 @@ type DiagnosisResult = {
   healthStatus?: string;
   severity?: string;
   confidence?: number;
+  description?: string;
   symptoms?: string[];
   causes?: string;
   treatments?: string[];
@@ -512,130 +513,120 @@ export default function App() {
               <View style={styles.closeButtonSpacer} />
             </View>
             {result ? (
-              <ScrollView
-                contentContainerStyle={styles.resultsContent}
-                showsVerticalScrollIndicator={false}
-              >
-                {imageUri && (
-                  <View style={styles.resultsImageFrame}>
+              <View style={styles.resultsLayout}>
+                <View style={styles.resultsImageFrame}>
+                  {imageUri && (
                     <Image
                       source={{ uri: imageUri }}
                       style={styles.resultsImage}
                       resizeMode="cover"
                     />
-                  </View>
-                )}
-                <DiagnosisReveal>
-                  <View
-                    style={[
-                      styles.resultHero,
-                      isHealthy ? styles.resultHeroHealthy : styles.resultHeroDiseased,
-                    ]}
-                  >
-                    <View style={styles.resultHeroTop}>
-                      <View
-                        style={[
-                          styles.resultIcon,
-                          isHealthy ? styles.resultIconHealthy : styles.resultIconDiseased,
-                        ]}
-                      >
-                        <Ionicons
-                          name={isHealthy ? "checkmark" : "alert"}
-                          size={22}
-                          color={isHealthy ? COLORS.green : COLORS.amber}
-                        />
-                      </View>
-                      {typeof result.confidence === "number" && (
-                        <View style={styles.confidencePill}>
-                          <Text style={styles.confidenceValue}>
-                            {Math.round(result.confidence)}%
-                          </Text>
-                          <Text style={styles.confidenceLabel}>CONFIDENCE</Text>
-                        </View>
-                      )}
-                    </View>
-                    <Text style={styles.resultHeroEyebrow}>
-                      {isHealthy ? "PLANT HEALTH" : "POSSIBLE CONDITION"}
-                    </Text>
-                    <Text style={styles.resultHeroTitle}>
-                      {isHealthy
-                        ? "Healthy leaf"
-                        : result.healthStatus || "Disease detected"}
-                    </Text>
-                    <Text style={styles.resultHeroPlant}>
-                      {result.plantName || "Plant identification unavailable"}
-                    </Text>
-                    {isHealthy ? (
-                      <Text style={styles.resultHeroDescription}>
-                        No disease signs were identified in this image.
-                      </Text>
-                    ) : result.symptoms?.[0] ? (
-                      <Text style={styles.resultHeroDescription} numberOfLines={3}>
-                        {result.symptoms[0]}
-                      </Text>
-                    ) : null}
-                  </View>
-
-                  {!isHealthy && (
-                    <View style={styles.careGrid}>
-                      {result.treatments?.[0] && (
-                        <View style={styles.careCard}>
-                          <View style={styles.careHeading}>
-                            <Ionicons
-                              name="medkit-outline"
-                              size={17}
-                              color={COLORS.green}
-                            />
-                            <Text style={styles.careTitle}>First step</Text>
-                          </View>
-                          <Text style={styles.careBody} numberOfLines={4}>
-                            {result.treatments[0]}
-                          </Text>
-                        </View>
-                      )}
-                      {result.preventionTips?.[0] && (
-                        <View style={styles.careCard}>
-                          <View style={styles.careHeading}>
-                            <Ionicons
-                              name="shield-checkmark-outline"
-                              size={17}
-                              color={COLORS.green}
-                            />
-                            <Text style={styles.careTitle}>Prevent spread</Text>
-                          </View>
-                          <Text style={styles.careBody} numberOfLines={4}>
-                            {result.preventionTips[0]}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
                   )}
-                  {result.causes ? (
-                    <View style={styles.causeNote}>
-                      <Text style={styles.causeTitle}>Possible cause</Text>
-                      <Text style={styles.careBody} numberOfLines={3}>
-                        {result.causes}
-                      </Text>
+                </View>
+                <ScrollView
+                  style={styles.resultsDetailsScroll}
+                  contentContainerStyle={styles.resultsContent}
+                  showsVerticalScrollIndicator={false}
+                >
+                  <DiagnosisReveal>
+                    <View style={styles.resultsCard}>
+                      <View style={styles.resultsCardContent}>
+                        <View style={styles.resultHero}>
+                          <View style={styles.resultHeroTop}>
+                            <View
+                              style={[
+                                styles.resultIcon,
+                                isHealthy ? styles.resultIconHealthy : styles.resultIconDiseased,
+                              ]}
+                            >
+                              <Ionicons
+                                name={isHealthy ? "checkmark" : "alert"}
+                                size={22}
+                                color={isHealthy ? COLORS.green : COLORS.amber}
+                              />
+                            </View>
+                            {typeof result.confidence === "number" && (
+                              <View style={styles.confidencePill}>
+                                <Text style={styles.confidenceValue}>
+                                  {Math.round(result.confidence)}%
+                                </Text>
+                                <Text style={styles.confidenceLabel}>CONFIDENCE</Text>
+                              </View>
+                            )}
+                          </View>
+                          <Text
+                            style={[
+                              styles.resultHeroEyebrow,
+                              !isHealthy && styles.resultHeroEyebrowDiseased,
+                            ]}
+                          >
+                            {isHealthy ? "PLANT HEALTH" : "POSSIBLE CONDITION"}
+                          </Text>
+                          <Text style={styles.resultHeroTitle}>
+                            {isHealthy
+                              ? "Healthy leaf"
+                              : result.healthStatus || "Disease detected"}
+                          </Text>
+                          <Text style={styles.resultHeroPlant}>
+                            {result.plantName || "Plant identification unavailable"}
+                          </Text>
+                          {isHealthy ? (
+                            <Text style={styles.resultHeroDescription}>
+                              No disease signs were identified in this image.
+                            </Text>
+                          ) : result.description ? (
+                            <Text style={styles.resultHeroDescription}>
+                              {result.description}
+                            </Text>
+                          ) : null}
+                        </View>
+
+                        {!isHealthy && (
+                          <>
+                            {result.symptoms?.length ? (
+                              <ResultSection
+                                title="Symptoms & signs"
+                                body={result.symptoms.join("\n\n")}
+                              />
+                            ) : null}
+                            {result.causes ? (
+                              <ResultSection title="Possible causes" body={result.causes} />
+                            ) : null}
+                            {result.treatments?.length ? (
+                              <ResultSection
+                                title="Recommended treatment"
+                                body={result.treatments.join("\n\n")}
+                              />
+                            ) : null}
+                            {result.preventionTips?.length ? (
+                              <ResultSection
+                                title="Prevention"
+                                body={result.preventionTips.join("\n\n")}
+                              />
+                            ) : null}
+                          </>
+                        )}
+                        <Text style={styles.disclaimer}>
+                          AI results are a guide, not a confirmed diagnosis.
+                        </Text>
+                        <TouchableOpacity
+                          accessibilityRole="button"
+                          onPress={() => {
+                            setResult(null);
+                            setImageUri(null);
+                            setBase64(null);
+                          }}
+                          style={styles.scanAgainButton}
+                          activeOpacity={0.85}
+                        >
+                          <Ionicons name="scan-outline" size={18} color={COLORS.white} />
+                          <Text style={styles.scanAgainText}>Scan another leaf</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                  ) : null}
-                  <Text style={styles.disclaimer}>
-                    AI results are a guide, not a confirmed diagnosis.
-                  </Text>
-                  <TouchableOpacity
-                    accessibilityRole="button"
-                    onPress={() => {
-                      setResult(null);
-                      setImageUri(null);
-                      setBase64(null);
-                    }}
-                    style={styles.scanAgainButton}
-                    activeOpacity={0.85}
-                  >
-                    <Ionicons name="scan-outline" size={18} color={COLORS.white} />
-                    <Text style={styles.scanAgainText}>Scan another leaf</Text>
-                  </TouchableOpacity>
-                </DiagnosisReveal>
-              </ScrollView>
+                  </DiagnosisReveal>
+                </ScrollView>
+              </View>
             ) : (
             <ScrollView
               contentContainerStyle={styles.scannerContent}
@@ -755,6 +746,15 @@ function InfoSection({
         <Text style={styles.infoTitle}>{title}</Text>
       </View>
       <Text style={styles.infoBody}>{body}</Text>
+    </View>
+  );
+}
+
+function ResultSection({ title, body }: { title: string; body: string }) {
+  return (
+    <View style={styles.scanResultSection}>
+      <Text style={styles.scanResultSectionTitle}>{title}</Text>
+      <Text style={styles.scanResultSectionBody}>{body}</Text>
     </View>
   );
 }
@@ -1079,44 +1079,47 @@ const styles = StyleSheet.create({
     marginTop: 11,
   },
   infoHeading: { flexDirection: "row", alignItems: "center", gap: 8 },
-  infoTitle: { color: COLORS.ink, fontWeight: "800", fontSize: 13 },
+  infoTitle: { color: COLORS.ink, fontWeight: "800", fontSize: 13   },
   infoBody: { color: COLORS.muted, fontSize: 12, lineHeight: 19, marginTop: 8 },
-  disclaimer: { color: COLORS.muted, fontSize: 10, lineHeight: 16, marginTop: 17 },
   scannerContent: { paddingHorizontal: 20, paddingBottom: 32 },
-  resultsContent: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 24 },
+  resultsLayout: { flex: 1 },
   resultsImageFrame: {
-    height: 156,
+    height: "34%",
+    minHeight: 145,
+    maxHeight: 240,
+    marginHorizontal: 20,
+    marginTop: 14,
+    marginBottom: 12,
     borderRadius: 18,
     overflow: "hidden",
     backgroundColor: "#DCE9DB",
-    marginBottom: 12,
+  },
+  resultsDetailsScroll: { flex: 1, minHeight: 0 },
+  resultsContent: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+  },
+  resultsCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: COLORS.border,
+    overflow: "hidden",
   },
-  resultsImage: { width: "100%", height: "100%" },
-  resultHero: {
-    borderRadius: 18,
-    padding: 15,
-    borderWidth: 1,
-  },
-  resultHeroHealthy: {
-    backgroundColor: "#EAF5EB",
-    borderColor: "#C9E5CF",
-  },
-  resultHeroDiseased: {
-    backgroundColor: "#FFF7EB",
-    borderColor: "#F1D9B6",
-  },
+  resultsImage: { width: "100%", height: "100%", backgroundColor: "#DCE9DB" },
+  resultsCardContent: { paddingHorizontal: 18, paddingTop: 16, paddingBottom: 18 },
+  resultHero: { paddingBottom: 2 },
   resultHeroTop: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 10,
+    marginBottom: 12,
   },
   resultIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1139,67 +1142,50 @@ const styles = StyleSheet.create({
   },
   resultHeroEyebrow: {
     color: COLORS.green,
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: "800",
     letterSpacing: 1.1,
   },
+  resultHeroEyebrowDiseased: { color: COLORS.amber },
   resultHeroTitle: {
     color: COLORS.ink,
-    fontSize: 21,
-    lineHeight: 26,
+    fontSize: 26,
+    lineHeight: 33,
     fontWeight: "800",
-    marginTop: 3,
+    marginTop: 4,
   },
   resultHeroPlant: {
     color: COLORS.deepGreen,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "700",
-    marginTop: 3,
+    marginTop: 5,
   },
   resultHeroDescription: {
     color: COLORS.muted,
-    fontSize: 11,
-    lineHeight: 16,
-    marginTop: 7,
-  },
-  careGrid: {
-    flexDirection: "row",
-    gap: 9,
+    fontSize: 15,
+    lineHeight: 23,
     marginTop: 10,
   },
-  careCard: {
-    flex: 1,
-    minWidth: 0,
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 14,
-    padding: 11,
+  scanResultSection: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingTop: 15,
+    marginTop: 15,
   },
-  careHeading: { flexDirection: "row", alignItems: "center", gap: 6 },
-  careTitle: { color: COLORS.ink, fontSize: 10, fontWeight: "800", flexShrink: 1 },
-  careBody: { color: COLORS.muted, fontSize: 10, lineHeight: 15, marginTop: 6 },
-  causeNote: {
-    borderLeftWidth: 3,
-    borderLeftColor: COLORS.green,
-    backgroundColor: COLORS.white,
-    paddingVertical: 8,
-    paddingHorizontal: 11,
-    marginTop: 9,
-    borderRadius: 8,
-  },
-  causeTitle: { color: COLORS.ink, fontSize: 10, fontWeight: "800" },
+  scanResultSectionTitle: { color: COLORS.ink, fontSize: 16, fontWeight: "800" },
+  scanResultSectionBody: { color: COLORS.muted, fontSize: 15, lineHeight: 23, marginTop: 8 },
+  disclaimer: { color: COLORS.muted, fontSize: 12, lineHeight: 18, marginTop: 20 },
   scanAgainButton: {
-    minHeight: 46,
+    minHeight: 52,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    marginTop: 11,
+    marginTop: 15,
     borderRadius: 13,
     backgroundColor: COLORS.green,
   },
-  scanAgainText: { color: COLORS.white, fontWeight: "800", fontSize: 12 },
+  scanAgainText: { color: COLORS.white, fontWeight: "800", fontSize: 15 },
   scannerIntro: { alignItems: "center", paddingTop: 23, paddingBottom: 21 },
   scanIconRing: {
     width: 62,
